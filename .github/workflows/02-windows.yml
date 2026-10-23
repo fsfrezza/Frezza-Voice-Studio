@@ -1,0 +1,58 @@
+name: 02 - Gerar Windows EXE
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    env:
+      VOICESTUDIO_RUST_TARGET: x86_64-pc-windows-msvc
+      VOICESTUDIO_UPDATE_CHANNEL: electron-stable-win32-x64
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Confirmar importacao
+        shell: bash
+        run: test -f electron/electron-builder.config.mjs && test -f uv.lock
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: '1.4.2'
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: native/desktop-bridge -> target
+          key: frezza-windows
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.13'
+          enable-cache: false
+      - name: Incluir uv Windows
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { execFileSync } from 'node:child_process';
+          import { mkdirSync, copyFileSync } from 'node:fs';
+          const p = execFileSync('where.exe', ['uv'], {encoding:'utf8'}).trim().split(/\r?\n/)[0];
+          mkdirSync('electron/build/uv', {recursive:true});
+          copyFileSync(p, 'electron/build/uv/uv-x86_64-pc-windows-msvc.exe');
+          NODE
+      - name: Instalar dependencias
+        run: bun install --frozen-lockfile
+      - name: Build Electron
+        run: bun run --cwd electron build
+      - name: Empacotar instalador x64
+        run: bun x electron-builder --config electron/electron-builder.config.mjs --win --x64 --publish never
+        working-directory: electron
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Frezza-Voice-Studio-Windows-x64
+          path: electron/release/*.exe
+          if-no-files-found: error
+          retention-days: 14
