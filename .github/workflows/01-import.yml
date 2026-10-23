@@ -1,0 +1,26 @@
+name: 01 - Importar fonte v0.5.6
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - name: Baixar codigo oficial fixado
+        run: git clone --depth 1 --branch v0.5.6 https://github.com/debpalash/VoiceStudio.git /tmp/voicestudio-upstream
+      - name: Copiar codigo e aplicar identidade da derivacao
+        run: python3 scripts/import_upstream.py /tmp/voicestudio-upstream .
+      - name: Registrar codigo completo no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Import upstream VoiceStudio v0.5.6 and configure Frezza desktop"
+            git push origin HEAD:main
+          fi
