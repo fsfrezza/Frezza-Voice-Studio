@@ -9,6 +9,7 @@ on:
       - 'omnivoice/**'
       - 'uv.lock'
       - 'bun.lock'
+      - '.github/workflows/02-windows.yml'
 permissions:
   contents: read
 jobs:
