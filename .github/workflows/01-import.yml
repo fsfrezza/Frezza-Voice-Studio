@@ -27,5 +27,6 @@ jobs:
           git add -A
           if ! git diff --cached --quiet; then
             git commit -m "Import upstream VoiceStudio v0.5.6 and configure Frezza desktop"
+            git pull --rebase origin main
             git push origin HEAD:main
           fi
