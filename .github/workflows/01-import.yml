@@ -1,6 +1,11 @@
 name: 01 - Importar fonte v0.5.6
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/01-import.yml'
+      - 'scripts/import_upstream.py'
 permissions:
   contents: write
 jobs:
